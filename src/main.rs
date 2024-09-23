@@ -150,12 +150,12 @@ fn main(){
     
         let tmp_pos = Vec2::new(tmpx, tmpy);
 
-        if own_world.get_sym_by_pos(tmp_pos) != 'K'{
+        if own_world.get_sym_by_pos(tmp_pos) != 'K' && tmp_pos.x <= WORLD_X as i8 && tmp_pos.y <= WORLD_Y as i8{
             own_world.set_sym_by_pos(tmp_pos, 'K');
             ships_left -= 1;
         }
         else{
-            println!("there is already a ship in this cell");
+            println!("incroect position");
         }
         println!("your field -->");
         own_world.read(true);
