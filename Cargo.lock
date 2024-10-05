@@ -89,6 +89,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "round"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b02705db4fa872ae37e464fc803b7ffa574e6c4a5e112c52a82550f9dd63b657"
+
+[[package]]
 name = "syn"
 version = "2.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -104,6 +110,7 @@ name = "test_cargo"
 version = "0.1.0"
 dependencies = [
  "rand",
+ "round",
 ]
 
 [[package]]
