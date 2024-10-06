@@ -4,18 +4,19 @@ use round::round_down;
 
 mod tilemap;
 
-const AIR_SYM: char = '.';
+const AIR_SYM: char = ' ';
 
 static mut GRAVITY_X: i16 = 1;
 static mut GRAVITY_Y: i16 = 1;
 
 //default 250
 static DELTA: u32 = 50;
+static dbgDELTA: u32 = 1000;
 pub static mut objects: Vec<tilemap::Object> = vec![];
 pub static mut polygon_objects: Vec<tilemap::PolygonObject> = vec![];
 
 pub fn update(){
-    let mut tmp_tile_map: tilemap::TileMap = tilemap::TileMap::new(AIR_SYM, 64, 64);
+    let mut tmp_tile_map: tilemap::TileMap = tilemap::TileMap::new(AIR_SYM,141, 67);
     unsafe{
 
         // POLYGONS
@@ -33,7 +34,7 @@ pub fn update(){
                     tmp1 = polygon_objects[i].points[j];
                     tmp2 = polygon_objects[i].points[j + 1];
                 }
-                else {
+                else if polygon_objects[i].points.len() > 2 {
                     tmp1 = polygon_objects[i].points[polygon_objects[i].points.len() - 1];
                     tmp2 = polygon_objects[i].points[0];
                 }
@@ -50,17 +51,24 @@ pub fn update(){
                 if vector.y >= 0 { oper_y = -1; }
                 else { oper_y = 1}
 
-                let mut dir: f64 = vector.y as f64 / vector.x as f64;
+                let mut dir: f64 = (vector.y + (oper_y * -1)) as f64 / (vector.x + (oper_x * -1)) as f64;
+                //println!("({} + {}) + ({} + {}) = {}", vector.x, oper_y, vector.x, oper_x, dir);
                 if dir < 0.0 { dir *= -1.0;  }
 
                 //println!("{}", dir);
                 
+                let mut iter: i16 = 0;
+                if vector.x.abs() > vector.y.abs() { iter = vector.x.abs(); }
+                else { iter = vector.y.abs(); }
+                //println!("{}\n", iter);
+
+
                 let mut tmp: tilemap::Vec2 = tilemap::Vec2::def();
-                for o in 0..64 {
+                for mut o in 0..iter {
                     float_plus += dir - round_down(dir, 0);
-                    let mut clear_dir: i16 = round_down(dir, 0) as i16;
                     
                     let mut now_pos: tilemap::Vec2 = tilemap::Vec2::def();
+                    
                     if vector.x == 0 {
                         let mut opr: i16 = 1;
                         if vector.y < 0 { opr *= -1; }
@@ -71,21 +79,27 @@ pub fn update(){
                         }
                         break;
                     }
-                    for l in 0..clear_dir + round_down(float_plus, 0) as i16 {
+                    for l in 0..round_down(dir, 0) as i16 + round_down(float_plus, 0) as i16 {
                         now_pos = tilemap::Vec2::new(polygon_objects[i].points[j].x + (tmp.x * oper_x), polygon_objects[i].points[j].y + (tmp.y * oper_y));
+                        if now_pos == tmp2 { break; }
                         tmp_tile_map.set_sym(now_pos, polygon_objects[i].sym);
                         tmp.y += 1;
+                        o += 1;
+                        if o >= iter { break; }
                     }
+                    if o >= iter { break; }
+                    if now_pos == tmp2 { break; }
                     tmp.x += 1;
                     //if (clear_dir + round_down(float_plus, 0) as i16) < 1 {
-                        now_pos = tilemap::Vec2::new(polygon_objects[i].points[j].x + (tmp.x * oper_x), polygon_objects[i].points[j].y + (tmp.y * oper_y));
-                        tmp_tile_map.set_sym(now_pos, polygon_objects[i].sym);
-                    //}
+                    now_pos = tilemap::Vec2::new(polygon_objects[i].points[j].x + (tmp.x * oper_x), polygon_objects[i].points[j].y + (tmp.y * oper_y));
                     if now_pos == tmp2 { break; }
+                    tmp_tile_map.set_sym(now_pos, polygon_objects[i].sym);
+                    //}
 
                     if float_plus >= 1.0 {
                         float_plus -= 1.0;
                     }
+                    if o >= iter { break; }
                 }
             }
         }
@@ -168,14 +182,14 @@ fn main(){
         thread::sleep_ms(DELTA);
         unsafe {
             //if frame_count % 1 == 0 {
-                let tmp1 = tilemap::Object::new(tilemap::Vec2::new(rng.gen_range(0..64), rng.gen_range(0..64)), '1', true);
-                let tmp2 = tilemap::Object::new(tilemap::Vec2::new(rng.gen_range(0..64), rng.gen_range(0..64)), '2', true);
-                let tmp3 = tilemap::Object::new(tilemap::Vec2::new(rng.gen_range(0..64), rng.gen_range(0..64)), '3', true);
+                let tmp1 = tilemap::Object::new(tilemap::Vec2::new(rng.gen_range(0..141), rng.gen_range(0..67)), '1', true);
+                let tmp2 = tilemap::Object::new(tilemap::Vec2::new(rng.gen_range(0..141), rng.gen_range(0..67)), '2', true);
+                let tmp3 = tilemap::Object::new(tilemap::Vec2::new(rng.gen_range(0..141), rng.gen_range(0..67)), '3', true);
                 objects.push(tmp1);
                 objects.push(tmp2);
                 objects.push(tmp3);
                 update();
-                thread::sleep_ms(1500);
+                thread::sleep_ms(dbgDELTA);
 
                 let mut trg = tilemap::PolygonObject::new('#', true);
                 trg.add(tilemap::Vec2::new(tmp1.position.x, tmp1.position.y));
@@ -184,12 +198,12 @@ fn main(){
 
                 polygon_objects.push(trg);
                 update();
-                thread::sleep_ms(1500);
+                thread::sleep_ms(dbgDELTA);
                 polygon_objects.remove(0);
                 objects.remove(objects.len() - 1);
                 objects.remove(objects.len() - 1);
                 objects.remove(objects.len() - 1);
-                println!("now frame: {}", frame_count);
+                //println!("now frame: {}", frame_count);
             //}
         }
     }
